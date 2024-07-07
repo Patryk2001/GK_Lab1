@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<title>CS424, Lab 2, Exercise 2</title>
+<style>
+    /* Styles for canvas and container */
+    body {
+        background-color: #DDDDDD;
+        -webkit-user-select: none; /* turn off text selection  / Webkit */
+        -moz-user-select: none;    /* Firefox */
+        -ms-user-select: none;     /* IE 10  */
+        -o-user-select: none;      /* Opera */
+        user-select: none;
+    }
+    canvas {
+        background-color: white;
+        display: block;
+    }
+    #canvasholder {
+        border: 2px solid black;
+        float: left;
+    }
+</style>
+</head>
+<body onload="init()"> 
+
+<h2>Lab 2, Exercise 2: Mousing</h2>
+
+<noscript>
+    <p>JavaScript is required to use this page.</p>
+</noscript>
+
+<p><b>Color:</b>
+    <select id="colorChoice">
+        <option value="0" selected="selected">Random</option>
+        <option value="1">Red</option>
+        <option value="2">Green</option>
+        <option value="3">Blue</option>
+        <option value="4">Yellow</option> <!-- Adding new color -->
+    </select>
+    <button onclick="clearCanvas()">Clear</button> <!-- Button to clear canvas -->
+    <select id="drawingTool"> <!-- Select element for choosing drawing tool -->
+        <option value="0">Squares</option>
+        <option value="1">Polygons</option>
+    </select>
+</p>
+
+<div id="canvasholder">
+    <canvas id="canvas" width="800" height="600">
+        Canvas not supported.
+    </canvas>
+</div>
+
+<script>
+    "use strict";
+    
+    var canvas;
+    var graphics;
+
+    function randomColorString() {
+        var r = Math.floor(256 * Math.random());
+        var g = Math.floor(256 * Math.random());
+        var b = Math.floor(256 * Math.random());
+        return "rgb(" + r + "," + g + "," + b + ")";
+    }
+
+    function clearCanvas() {
+        graphics.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function init() {
+        try {
+            canvas = document.getElementById("canvas");
+            graphics = canvas.getContext("2d");
+        } catch (e) {
+            document.getElementById("canvasholder").innerHTML =
+                "<p>Canvas graphics is not supported.<br>" +
+                "An error occurred while initializing graphics.</p>";
+            return;
+        }
+        addGraphicsContextExtras(graphics);
+        installMouseHandler();
+        graphics.fillStyle = "white";
+        graphics.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function installMouseHandler() {
+        var dragging = false;
+        var startX, startY;
+        var prevX, prevY;
+        var colorChoice;
+        var toolChoice;
+
+        function doMouseDown(evt) {
+            if (dragging) {
+                return;
+            }
+            if (evt.button != 0) {
+                return;
+            }
+            var x, y;
+            var r = canvas.getBoundingClientRect();
+            x = Math.round(evt.clientX - r.left);
+            y = Math.round(evt.clientY - r.top);
+            dragging = true;
+            if (dragging) {
+                startX = prevX = x;
+                startY = prevY = y;
+                document.addEventListener("mousemove", doMouseMove, false);
+                document.addEventListener("mouseup", doMouseUp, false);
+            }
+            colorChoice = Number(document.getElementById("colorChoice").value);
+            toolChoice = Number(document.getElementById("drawingTool").value);
+        }
+        function drawPolygon(x, y, sides, radius) {
+    graphics.beginPath();
+    var angle = Math.PI * 2 / sides;
+    graphics.moveTo(x + radius * Math.cos(0), y + radius * Math.sin(0));
+    for (var i = 1; i <= sides; i++) {
+        graphics.lineTo(x + radius * Math.cos(angle * i), y + radius * Math.sin(angle * i));
+    }
+    graphics.closePath();
+    graphics.fill();
+    graphics.stroke();
+}
+
+function doMouseMove(evt) {
+    if (!dragging) {
+        return;
+    }
+    var x, y;
+    var r = canvas.getBoundingClientRect();
+    x = Math.round(evt.clientX - r.left);
+    y = Math.round(evt.clientY - r.top);
+
+    if (Math.abs(x - prevX) + Math.abs(y - prevY) < 3) {
+        return;
+    }
+
+    if (toolChoice === 0) { // Drawing squares
+        if (colorChoice == 0) {
+            graphics.fillStyle = randomColorString();
+        } else if (colorChoice == 1) {
+            graphics.fillStyle = "red";
+        } else if (colorChoice == 2) {
+            graphics.fillStyle = "green";
+        } else if (colorChoice == 3) {
+            graphics.fillStyle = "blue";
+        } else if (colorChoice == 4) { // Yellow
+            graphics.fillStyle = "yellow";
+        }
+        graphics.fillRect(x - 20, y - 20, 40, 40);
+        graphics.strokeRect(x - 20, y - 20, 40, 40);
+    } else if (toolChoice === 1) { // Drawing polygons
+        if (colorChoice == 0) {
+            graphics.fillStyle = randomColorString();
+        } else if (colorChoice == 1) {
+            graphics.fillStyle = "red";
+        } else if (colorChoice == 2) {
+            graphics.fillStyle = "green";
+        } else if (colorChoice == 3) {
+            graphics.fillStyle = "blue";
+        } else if (colorChoice == 4) { // Yellow
+            graphics.fillStyle = "yellow";
+        }
+        drawPolygon(x, y, 22, 50); // Draw a polygon with 22 sides and radius 50
+    }
+
+    prevX = x;
+    prevY = y;
+}
+
+        function doMouseUp(evt) {
+            if (!dragging) {
+                return;
+            }
+            dragging = false;
+            document.removeEventListener("mousemove", doMouseMove, false);
+            document.removeEventListener("mouseup", doMouseMove, false);
+        }
+
+        canvas.addEventListener("mousedown", doMouseDown, false);
+    }
+
+    function addGraphicsContextExtras(graphics) {
+        graphics.strokeLine = function (x1, y1, x2, y2) {
+            this.beginPath();
+            this.moveTo(x1, y1);
+            this.lineTo(x2, y2);
+            this.stroke();
+        }
+        // Add other drawing functions here
+    }
+</script>
+</body>
+</html>
